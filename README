@@ -1,0 +1,27 @@
+**************************************************************
+*######################### -DEHIVIX- ########################*
+**************************************************************
+*				*			     *
+*                              * *			     *
+*			        *			     *
+*                      *                  *		     *
+*                     * *                * *		     *
+*		       *		  *		     *
+**************************************************************
+*############################################################*
+**************************************************************
+***************************-ALIENSDS-*************************
+*      Un juego hecho en Piton gracias a la implementacion   *
+*     de la libreria PyGame; totalmente libre bajo licencia  *
+*       GPL, animaciones en 2D y construido con el fin de    *
+*        revivir la afinidad por los shotters de los 80      *
+**************************Requerimientos**********************
+* 	-libreria PyGame de Python			     *
+*	-64 mb de memoria de video			     *
+*	-alsaproject instalado				     *
+*	-128 mb de ram					     *
+****************************Ejecucion*************************
+*	Para ejecutar basta con teclear desde consola:	     *
+*	$Python aliens.py				     *
+**************************************************************
+************************Suerte y Diviertete*******************	
