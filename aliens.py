@@ -1,25 +1,36 @@
 #!/usr/bin/env python
 
-import random, os.path
+import random
+import os.path
 
-#importacion de modulos basicos de python
+# importacion de modulos basicos de python
 import pygame
-from pygame.locals import *
+from pygame.locals import (
+    Rect,
+    Color,
+    QUIT,
+    KEYDOWN,
+    K_ESCAPE,
+    K_RIGHT,
+    K_LEFT,
+    K_SPACE,
+)
 
-#ver si se pueden cargar las BMP
+# ver si se pueden cargar las BMP
 if not pygame.image.get_extended():
     raise SystemExit("lo siento, se necesita el modulo de imagenes")
 
 
-#constantes del juego
-MAX_SHOTS      = 2      #maximo de balas en pantalla
-ALIEN_ODDS     = 22     #frecuencia de aparicion de los aliens
-BOMB_ODDS      = 60    #frecuencia de lanzamiento de nueva bomba 
-ALIEN_RELOAD   = 12     #frames para nuevos aliens
-SCREENRECT     = Rect(0, 0, 640, 480)
-SCORE          = 0
+# constantes del juego
+MAX_SHOTS = 2  # maximo de balas en pantalla
+ALIEN_ODDS = 22  # frecuencia de aparicion de los aliens
+BOMB_ODDS = 60  # frecuencia de lanzamiento de nueva bomba
+ALIEN_RELOAD = 12  # frames para nuevos aliens
+SCREENRECT = Rect(0, 0, 640, 480)
+SCORE = 0
 
 main_dir = os.path.split(os.path.abspath(__file__))[0]
+
 
 def load_image(file):
     "imagen cargada, preparate a jugar"
@@ -27,8 +38,11 @@ def load_image(file):
     try:
         surface = pygame.image.load(file)
     except pygame.error:
-        raise SystemExit('no se ha podido cargar la imagen "%s" %s'%(file, pygame.get_error()))
+        raise SystemExit(
+            'no se ha podido cargar la imagen "%s" %s' %
+            (file, pygame.get_error()))
     return surface.convert()
+
 
 def load_images(*files):
     imgs = []
@@ -40,25 +54,17 @@ def load_images(*files):
 class dummysound:
     def play(self): pass
 
+
 def load_sound(file):
-    if not pygame.mixer: return dummysound()
+    if not pygame.mixer:
+        return dummysound()
     file = os.path.join(main_dir, 'data', file)
     try:
         sound = pygame.mixer.Sound(file)
         return sound
     except pygame.error:
-        print ('advertencia, no se puede cargar, %s' % file)
+        print('advertencia, no se puede cargar, %s' % file)
     return dummysound()
-
-
-
-# each type of game object gets an init and an
-# update function. the update function is called
-# once per frame, and it is when each object should
-# change it's current position and state. the Player
-# object actually gets a "move" function instead of
-# update, since it is passed extra information about
-# the keyboard
 
 
 class Player(pygame.sprite.Sprite):
@@ -66,6 +72,7 @@ class Player(pygame.sprite.Sprite):
     bounce = 24
     gun_offset = -11
     images = []
+
     def __init__(self):
         pygame.sprite.Sprite.__init__(self, self.containers)
         self.image = self.images[0]
@@ -75,14 +82,15 @@ class Player(pygame.sprite.Sprite):
         self.facing = -1
 
     def move(self, direction):
-        if direction: self.facing = direction
+        if direction:
+            self.facing = direction
         self.rect.move_ip(direction*self.speed, 0)
         self.rect = self.rect.clamp(SCREENRECT)
         if direction < 0:
             self.image = self.images[0]
         elif direction > 0:
             self.image = self.images[1]
-        self.rect.top = self.origtop - (self.rect.left//self.bounce%2)
+        self.rect.top = self.origtop - (self.rect.left//self.bounce % 2)
 
     def gunpos(self):
         pos = self.facing*self.gun_offset + self.rect.centerx
@@ -93,11 +101,12 @@ class Alien(pygame.sprite.Sprite):
     speed = 13
     animcycle = 12
     images = []
+
     def __init__(self):
         pygame.sprite.Sprite.__init__(self, self.containers)
         self.image = self.images[0]
         self.rect = self.image.get_rect()
-        self.facing = random.choice((-1,1)) * Alien.speed
+        self.facing = random.choice((-1, 1)) * Alien.speed
         self.frame = 0
         if self.facing < 0:
             self.rect.right = SCREENRECT.right
@@ -105,17 +114,18 @@ class Alien(pygame.sprite.Sprite):
     def update(self):
         self.rect.move_ip(self.facing, 0)
         if not SCREENRECT.contains(self.rect):
-            self.facing = -self.facing;
+            self.facing = -self.facing
             self.rect.top = self.rect.bottom + 1
             self.rect = self.rect.clamp(SCREENRECT)
         self.frame = self.frame + 1
-        self.image = self.images[self.frame//self.animcycle%3]
+        self.image = self.images[self.frame//self.animcycle % 3]
 
 
 class Explosion(pygame.sprite.Sprite):
     defaultlife = 12
     animcycle = 3
     images = []
+
     def __init__(self, actor):
         pygame.sprite.Sprite.__init__(self, self.containers)
         self.image = self.images[0]
@@ -124,13 +134,15 @@ class Explosion(pygame.sprite.Sprite):
 
     def update(self):
         self.life = self.life - 1
-        self.image = self.images[self.life//self.animcycle%2]
-        if self.life <= 0: self.kill()
+        self.image = self.images[self.life//self.animcycle % 2]
+        if self.life <= 0:
+            self.kill()
 
 
 class Shot(pygame.sprite.Sprite):
     speed = -11
     images = []
+
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self, self.containers)
         self.image = self.images[0]
@@ -145,11 +157,12 @@ class Shot(pygame.sprite.Sprite):
 class Bomb(pygame.sprite.Sprite):
     speed = 9
     images = []
+
     def __init__(self, alien):
         pygame.sprite.Sprite.__init__(self, self.containers)
         self.image = self.images[0]
-        self.rect = self.image.get_rect(midbottom=
-                    alien.rect.move(0,5).midbottom)
+        self.rect = self.image.get_rect(
+            midbottom=alien.rect.move(0, 5).midbottom)
 
     def update(self):
         self.rect.move_ip(0, self.speed)
@@ -175,12 +188,11 @@ class Score(pygame.sprite.Sprite):
             self.image = self.font.render(msg, 0, self.color)
 
 
-
-def main(winstyle = 0):
+def main(winstyle=0):
     # Inicio de pygame
     pygame.init()
     if pygame.mixer and not pygame.mixer.get_init():
-        print ('advertencia, no hay sonido')
+        print('advertencia, no hay sonido')
         pygame.mixer = None
 
     # colocar en modo pantalla
@@ -188,8 +200,8 @@ def main(winstyle = 0):
     bestdepth = pygame.display.mode_ok(SCREENRECT.size, winstyle, 32)
     screen = pygame.display.set_mode(SCREENRECT.size, winstyle, bestdepth)
 
-    #cargar imagenes, asignar para las clases sprite 
-    #(esto debe hacerse antes de ser usadas las clases, despues del setup de la pantalla)
+    # cargar imagenes, asignar para las clases sprite
+    # (esto debe hacerse antes de ser usadas las clases, despues del setup de la pantalla)
     img = load_image('player1.gif')
     Player.images = [img, pygame.transform.flip(img, 1, 0)]
     img = load_image('explosion1.gif')
@@ -198,21 +210,21 @@ def main(winstyle = 0):
     Bomb.images = [load_image('bomb.gif')]
     Shot.images = [load_image('shot.gif')]
 
-    #decorar la ventana del juego
+    # decorar la ventana del juego
     icon = pygame.transform.scale(Alien.images[0], (32, 32))
     pygame.display.set_icon(icon)
     pygame.display.set_caption('Dehivix - AliensDs')
     pygame.mouse.set_visible(0)
 
-    #crear el fondo
+    # crear el fondo
     bgdtile = load_image('background.gif')
     background = pygame.Surface(SCREENRECT.size)
     for x in range(0, SCREENRECT.width, bgdtile.get_width()):
         background.blit(bgdtile, (x, 0))
-    screen.blit(background, (0,0))
+    screen.blit(background, (0, 0))
     pygame.display.flip()
 
-    #cargar los efectos de sonido
+    # cargar los efectos de sonido
     boom_sound = load_sound('boom.wav')
     shoot_sound = load_sound('car_door.wav')
     if pygame.mixer:
@@ -227,7 +239,7 @@ def main(winstyle = 0):
     all = pygame.sprite.RenderUpdates()
     lastalien = pygame.sprite.GroupSingle()
 
-    #asignar grupos por defecto para las clases sprite 
+    # asignar grupos por defecto para las clases sprite
     Player.containers = all
     Alien.containers = aliens, all, lastalien
     Shot.containers = shots, all
@@ -235,36 +247,34 @@ def main(winstyle = 0):
     Explosion.containers = all
     Score.containers = all
 
-    #crear algunos valores de inicio
+    # crear algunos valores de inicio
     global score
     alienreload = ALIEN_RELOAD
-    kills = 0
     clock = pygame.time.Clock()
 
-    #inicializar nuestros sprites 
+    # inicializar nuestros sprites
     global SCORE
     player = Player()
-    Alien() #nota, esta 'vida' porque va al grupo sprite
+    Alien()  # nota, esta 'vida' porque va al grupo sprite
     if pygame.font:
         all.add(Score())
 
-
     while player.alive():
 
-        #obtener del teclado
+        # obtener del teclado
         for event in pygame.event.get():
             if event.type == QUIT or \
-                (event.type == KEYDOWN and event.key == K_ESCAPE):
-                    return
+                    (event.type == KEYDOWN and event.key == K_ESCAPE):
+                return
         keystate = pygame.key.get_pressed()
 
         # limpliar/borrar los ultimos dibujos de sprites
         all.clear(screen, background)
 
-        #actualizar todos los sprites
+        # actualizar todos los sprites
         all.update()
 
-        #teclas del jugador
+        # teclas del jugador
         direction = keystate[K_RIGHT] - keystate[K_LEFT]
         player.move(direction)
         firing = keystate[K_SPACE]
@@ -303,11 +313,11 @@ def main(winstyle = 0):
             Explosion(bomb)
             player.kill()
 
-        #dibujar la escena
+        # dibujar la escena
         dirty = all.draw(screen)
         pygame.display.update(dirty)
 
-        #captar el framerate
+        # captar el framerate
         clock.tick(40)
 
     if pygame.mixer:
@@ -316,6 +326,6 @@ def main(winstyle = 0):
     pygame.quit()
 
 
-
-#llamada a la funcion "main" si este script esta corriendo
-if __name__ == '__main__': main()
+# llamada a la funcion "main" si este script esta corriendo
+if __name__ == '__main__':
+    main()
